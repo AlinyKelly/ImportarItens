@@ -8,7 +8,6 @@ import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
 import br.com.sankhya.ws.ServiceContext
-import com.sankhya.util.TimeUtils
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
 import java.io.File
@@ -24,55 +23,63 @@ class ImportadorDeItensKT : AcaoRotinaJava {
     @Throws(MGEModelException::class, IOException::class)
     override fun doAction(contextoAcao: ContextoAcao) {
 
-        var ultilinha:Linha? = null
+        var ultimaLinha: Linha? = null
 
         val linhaPai = contextoAcao.linhas[0]
-            val nunota = linhaPai.getCampo("NUNOTA") as BigDecimal?
+        val nunota = linhaPai.getCampo("NUNOTA") as BigDecimal?
 
-            val arquivo = retornaVO("Anexo", "CODATA = ${nunota}") ?: throw MGEModelException("Arquivo não encontrado")
-            val data = arquivo.asBlob("CONTEUDO")
-            val ctx = ServiceContext.getCurrent()
-            val file = File(ctx.tempFolder, "ITEMPEDIDO" + System.currentTimeMillis())
+        val arquivo = retornaVO("Anexo", "CODATA = ${nunota}") ?: throw MGEModelException("Arquivo não encontrado")
+        val data = arquivo.asBlob("CONTEUDO")
+        val ctx = ServiceContext.getCurrent()
+        val file = File(ctx.tempFolder, "ITEMPEDIDO" + System.currentTimeMillis())
 
-            var count = 0
-            FileUtils.writeByteArrayToFile(file, data)
-            try {
-                BufferedReader(FileReader(file)).use { br ->
-                    var line = br.readLine();
-                    line = br.readLine()
+        var count = 0
+        FileUtils.writeByteArrayToFile(file, data)
+        try {
+            BufferedReader(FileReader(file)).use { br ->
+                var line = br.readLine();
+                line = br.readLine()
 
-                    while (line != null) {
-                        if (count == 0) {
-                            count++
-                            continue
-                        }
+                while (line != null) {
+                    if (count == 0) {
                         count++
-
-                        val json = trataLinha(line)
-                        ultilinha = json
-                        val novaLinha = contextoAcao.novaLinha("ItemNota")
-
-                        //Buscar descricao
-                        val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
-                            ?: throw MGEModelException("Produto não encontrado")
-                        val codprod = descrprod.asBigDecimal("CODPROD")
-
-                        novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
-                        novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
-                        novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
-                        novaLinha.setCampo("QTDNEG", convertBrlToBigDecimal(json.quantidade.trim()))
-                        novaLinha.setCampo("CODPROD", codprod)
-                        novaLinha.setCampo("VLRUNIT", convertBrlToBigDecimal(json.vlrunitario.trim()))
-                        novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
-                        novaLinha.setCampo("CODVOL", "UN")
-                        novaLinha.save()
-                        line = br.readLine()
+                        continue
                     }
-                }
-            } catch (e: Exception) {
-                throw MGEModelException("$e $ultilinha")
-            }
+                    count++
 
+                    val json = trataLinha(line)
+                    ultimaLinha = json
+                    val novaLinha = contextoAcao.novaLinha("ItemNota")
+
+                    //Buscar descricao
+                    val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
+                        ?: throw MGEModelException("Produto não encontrado")
+                    val codprod = descrprod.asBigDecimal("CODPROD")
+
+                    //throw Exception("Vlrtotal calculado: " + converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim())).toString())
+
+                    novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
+                    novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
+                    novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
+                    novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
+                    novaLinha.setCampo("CODPROD", codprod)
+                    novaLinha.setCampo("VLRUNIT", converterValorMonetario(json.vlrunitario.trim()))
+                    novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
+                    novaLinha.setCampo("CODVOL", "UN")
+                    novaLinha.setCampo(
+                        "VLRTOT",
+                        converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim()))
+                    )
+                    novaLinha.setCampo("VLRDESC", 0)
+                    novaLinha.setCampo("PERCDESC", 0)
+
+                    novaLinha.save()
+                    line = br.readLine()
+                }
+            }
+        } catch (e: Exception) {
+            throw MGEModelException("$e $ultimaLinha")
+        }
 
     }
 
@@ -123,6 +130,18 @@ class ImportadorDeItensKT : AcaoRotinaJava {
         nf.isParseBigDecimal = true
         return nf.parse(str, ParsePosition(0)) as BigDecimal?
     }
+
+    /**
+     * Converte um valor monetário (String) com separador de milhares para [BigDecimal]
+     * @author Aliny Sousa
+     * @param str  Texto a ser convertido
+     * @return [BigDecimal]
+     */
+    fun converterValorMonetario(valorMonetario: String): BigDecimal {
+        val valorNumerico = valorMonetario.replace("\"", "").replace(".", "").replace(",", ".")
+        return BigDecimal(valorNumerico)
+    }
+
 
     /**
      * Converte uma data dd/mm/yyyy ou dd-mm-yyyy em timestamp
