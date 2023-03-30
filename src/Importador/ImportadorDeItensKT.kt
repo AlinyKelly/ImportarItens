@@ -64,7 +64,7 @@ class ImportadorDeItensKT : AcaoRotinaJava {
                         novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("VLRUNIT", convertBrlToBigDecimal(json.vlrunitario.trim()))
                         novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
-                        //novaLinha.setCampo("")
+                        novaLinha.setCampo("CODVOL", "UN")
                         novaLinha.save()
                         line = br.readLine()
                     }
