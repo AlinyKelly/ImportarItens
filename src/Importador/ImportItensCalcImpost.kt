@@ -7,8 +7,11 @@ import br.com.sankhya.jape.core.JapeSession.SessionHandle
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
+import br.com.sankhya.modelcore.comercial.CentralFinanceiro
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
+import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO
 import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO
+import br.com.sankhya.modelcore.util.EntityFacadeFactory
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
@@ -21,12 +24,14 @@ import java.text.*
 import java.util.*
 
 
-class ImportadorDeItensKT : AcaoRotinaJava {
+class ImportItensCalcImpost : AcaoRotinaJava {
     @Throws(MGEModelException::class, IOException::class)
     override fun doAction(contextoAcao: ContextoAcao) {
+        var hnd: SessionHandle? = null
 
-        var ultimaLinha: Linha? = null
+        var ultimaLinhaJson: LinhaJson? = null
 
+        //Buscar nro da nota
         val linhaPai = contextoAcao.linhas[0]
         val nunota = linhaPai.getCampo("NUNOTA") as BigDecimal?
 
@@ -36,10 +41,14 @@ class ImportadorDeItensKT : AcaoRotinaJava {
         val file = File(ctx.tempFolder, "ITEMPEDIDO" + System.currentTimeMillis())
 
         var count = 0
+
         FileUtils.writeByteArrayToFile(file, data)
+
         try {
+            hnd = JapeSession.open()
+
             BufferedReader(FileReader(file)).use { br ->
-                var line = br.readLine();
+                var line = br.readLine()
                 line = br.readLine()
 
                 while (line != null) {
@@ -50,9 +59,8 @@ class ImportadorDeItensKT : AcaoRotinaJava {
                     count++
 
                     val json = trataLinha(line)
-                    ultimaLinha = json
+                    ultimaLinhaJson = json
                     val novaLinha = contextoAcao.novaLinha("ItemNota")
-
 
                     //Buscar descricao
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
@@ -80,14 +88,19 @@ class ImportadorDeItensKT : AcaoRotinaJava {
                     novaLinha.save()
                     line = br.readLine()
                 }
-            }
-        } catch (e: Exception) {
-            throw MGEModelException("$e $ultimaLinha")
-        }
+                //Melhorar o recalculo está demorando para carregar
+                recalcularImpostos(nunota)
 
+            }
+
+        } catch (e: Exception) {
+            throw MGEModelException("$e $ultimaLinhaJson")
+        } finally {
+            JapeSession.close(hnd)
+        }
     }
 
-    private fun trataLinha(linha: String): Linha {
+    private fun trataLinha(linha: String): LinhaJson {
         var cells = if (linha.contains(";")) linha.split(";(?=([^\"]*\"[^\"]*\")*[^\"]*\$)".toRegex()).toTypedArray()
         else linha.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*\$)".toRegex()).toTypedArray()
 
@@ -96,7 +109,7 @@ class ImportadorDeItensKT : AcaoRotinaJava {
                 return@filter false
             return@filter true
         }.toTypedArray() // Remove linhas vazias
-        val ret = if (cells.isNotEmpty()) Linha(cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]) else
+        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]) else
             null
 
         if (ret == null) {
@@ -120,19 +133,6 @@ class ImportadorDeItensKT : AcaoRotinaJava {
             JapeSession.close(hnd)
         }
         return dynamicVo
-    }
-
-    /**
-     * Converte um valor em BRL(com ",") para [BigDecimal]
-     * @author Luis Ricardo Alves Santos
-     * @param str  Texto a ser convertido
-     * @return [BigDecimal]
-     */
-    fun convertBrlToBigDecimal(str: String): BigDecimal? {
-        val inId = Locale("pt", "BR")
-        val nf: DecimalFormat = NumberFormat.getInstance(inId) as DecimalFormat
-        nf.isParseBigDecimal = true
-        return nf.parse(str, ParsePosition(0)) as BigDecimal?
     }
 
     /**
@@ -163,7 +163,22 @@ class ImportadorDeItensKT : AcaoRotinaJava {
         }
     }
 
-    data class Linha(
+    /**
+     * Recalcula os impostos dos itens e da nota
+     * @author Aliny Sousa
+     * @param nunota  Numero da nota para recalculo
+     */
+    fun recalcularImpostos(nunota: BigDecimal?) {
+        val impostosHelper = ImpostosHelpper()
+        impostosHelper.calcularImpostos(nunota)
+        impostosHelper.totalizarNota(nunota)
+
+        val centralFinanceiro = CentralFinanceiro()
+        centralFinanceiro.inicializaNota(nunota)
+        centralFinanceiro.refazerFinanceiro()
+    }
+
+    data class LinhaJson(
 //        @JsonProperty("PROJETO")
         val projeto: String,
 //        @JsonProperty("DTPREV")

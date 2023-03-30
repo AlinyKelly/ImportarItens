@@ -9,7 +9,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="CODVOL informado diretamente no código">
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade">
+      <change afterPath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ImportarItens.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ImportarItens.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorDeItensKT.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportadorDeItensKT.kt" afterDir="false" />
@@ -43,7 +44,6 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "last_opened_file_path": "D:/Documentos/Sankhya Arquivos/ADKL/importadorGabrielLeite.jar",
     "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15",
@@ -74,7 +74,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680149052008</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade">
+      <created>1680180309110</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1680180309110</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -91,7 +98,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Segundo commit" />
     <MESSAGE value="CODVOL informado diretamente no código" />
-    <option name="LAST_COMMIT_MESSAGE" value="CODVOL informado diretamente no código" />
+    <MESSAGE value="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade" />
+    <option name="LAST_COMMIT_MESSAGE" value="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
