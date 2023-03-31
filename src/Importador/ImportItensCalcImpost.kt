@@ -7,7 +7,6 @@ import br.com.sankhya.jape.core.JapeSession.SessionHandle
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
-import br.com.sankhya.modelcore.comercial.CentralFinanceiro
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
@@ -64,7 +63,6 @@ class ImportItensCalcImpost : AcaoRotinaJava {
 
                     if(codprod !== null) {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
-                        //throw Exception("Vlrtotal calculado: " + converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim())).toString())
                         novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
                         novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
@@ -102,6 +100,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
                 }
                 //Melhorar o recalculo está demorando para carregar
                 recalcularImpostos(nunota)
+
 
             }
 
@@ -202,9 +201,9 @@ class ImportItensCalcImpost : AcaoRotinaJava {
         impostosHelper.calcularImpostos(nunota)
         impostosHelper.totalizarNota(nunota)
 
-        val centralFinanceiro = CentralFinanceiro()
-        centralFinanceiro.inicializaNota(nunota)
-        centralFinanceiro.refazerFinanceiro()
+//        val centralFinanceiro = CentralFinanceiro()
+//        centralFinanceiro.inicializaNota(nunota)
+//        centralFinanceiro.refazerFinanceiro()
     }
 
     data class LinhaJson(

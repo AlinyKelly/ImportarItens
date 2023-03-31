@@ -9,7 +9,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Remocao do importador em java, estava vazio">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorDeItens.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorDeItensKT.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportadorDeItensKT.kt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -35,17 +40,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "D:/Documentos/Sankhya Arquivos/ADKL/importadorGabrielLeite.jar",
-    "project.structure.last.edited": "Libraries",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Documentos/Sankhya Arquivos/ADKL/importadorGabrielLeite.jar&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -90,7 +95,35 @@
       <option name="project" value="LOCAL" />
       <updated>1680226023792</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="workspace atualizacao">
+      <created>1680227155474</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1680227155474</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Criação do botao para inserir os itens do log na nota correspondente">
+      <created>1680288024678</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1680288024678</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Criação do botao para importar os itens para a mov interna">
+      <created>1680288063736</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1680288063736</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Remocao do importador em java, estava vazio">
+      <created>1680288091160</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1680288091160</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -110,7 +143,11 @@
     <MESSAGE value="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade" />
     <MESSAGE value="Calculo dos impostos" />
     <MESSAGE value="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
-    <option name="LAST_COMMIT_MESSAGE" value="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
+    <MESSAGE value="workspace atualizacao" />
+    <MESSAGE value="Criação do botao para inserir os itens do log na nota correspondente" />
+    <MESSAGE value="Criação do botao para importar os itens para a mov interna" />
+    <MESSAGE value="Remocao do importador em java, estava vazio" />
+    <option name="LAST_COMMIT_MESSAGE" value="Remocao do importador em java, estava vazio" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
