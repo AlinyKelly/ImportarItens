@@ -9,10 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Calculo dos impostos">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" afterDir="false" />
-    </list>
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -86,7 +83,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680203382697</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log">
+      <created>1680226023792</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1680226023792</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -105,7 +109,8 @@
     <MESSAGE value="CODVOL informado diretamente no código" />
     <MESSAGE value="Resolução do problema de conversão. Criado um novo conversor de monetario e quantidade" />
     <MESSAGE value="Calculo dos impostos" />
-    <option name="LAST_COMMIT_MESSAGE" value="Calculo dos impostos" />
+    <MESSAGE value="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
+    <option name="LAST_COMMIT_MESSAGE" value="Melhorias aplicadas: mensagem de final de execução. Criação de linhas na tela de log" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
