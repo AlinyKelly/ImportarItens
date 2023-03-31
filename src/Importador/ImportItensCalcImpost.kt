@@ -9,9 +9,6 @@ import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
 import br.com.sankhya.modelcore.comercial.CentralFinanceiro
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
-import br.com.sankhya.modelcore.dwfdata.vo.CabecalhoNotaVO
-import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO
-import br.com.sankhya.modelcore.util.EntityFacadeFactory
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
@@ -41,6 +38,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
         val file = File(ctx.tempFolder, "ITEMPEDIDO" + System.currentTimeMillis())
 
         var count = 0
+        var countLog = 0
 
         FileUtils.writeByteArrayToFile(file, data)
 
@@ -60,33 +58,47 @@ class ImportItensCalcImpost : AcaoRotinaJava {
 
                     val json = trataLinha(line)
                     ultimaLinhaJson = json
-                    val novaLinha = contextoAcao.novaLinha("ItemNota")
-
                     //Buscar descricao
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
-                        ?: throw MGEModelException("Produto não encontrado")
-                    val codprod = descrprod.asBigDecimal("CODPROD")
+                    val codprod = descrprod?.asBigDecimal("CODPROD")
 
-                    //throw Exception("Vlrtotal calculado: " + converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim())).toString())
+                    if(codprod !== null) {
+                        val novaLinha = contextoAcao.novaLinha("ItemNota")
+                        //throw Exception("Vlrtotal calculado: " + converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim())).toString())
+                        novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
+                        novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
+                        novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
+                        novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
+                        novaLinha.setCampo("CODPROD", codprod)
+                        novaLinha.setCampo("VLRUNIT", converterValorMonetario(json.vlrunitario.trim()))
+                        novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
+                        novaLinha.setCampo("CODVOL", "UN")
+                        novaLinha.setCampo(
+                            "VLRTOT",
+                            converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim()))
+                        )
+                        novaLinha.setCampo("VLRDESC", 0)
+                        novaLinha.setCampo("PERCDESC", 0)
+                        novaLinha.setCampo("ATUALESTOQUE", 1)
 
-                    novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
-                    novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
-                    novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
-                    novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
-                    novaLinha.setCampo("CODPROD", codprod)
-                    novaLinha.setCampo("VLRUNIT", converterValorMonetario(json.vlrunitario.trim()))
-                    novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
-                    novaLinha.setCampo("CODVOL", "UN")
-                    novaLinha.setCampo(
-                        "VLRTOT",
-                        converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim()))
-                    )
-                    novaLinha.setCampo("VLRDESC", 0)
-                    novaLinha.setCampo("PERCDESC", 0)
-                    novaLinha.setCampo("ATUALESTOQUE", 1)
+                        novaLinha.save()
+                        line = br.readLine()
+                    } else {
+                        val novaLinhaLog = contextoAcao.novaLinha("AD_LOGIMPORTACAOCOMPRAS")
+                        novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
+                        novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
+                        novaLinhaLog.setCampo("DTPREV", stringToTimeStamp(json.dtprev.trim()))
+                        novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
+                        novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
+                        novaLinhaLog.setCampo("VLRUNITARIO", converterValorMonetario(json.vlrunitario.trim()))
+                        novaLinhaLog.setCampo("LOCALORIG", BigDecimal(json.localorigem.trim()))
+                        novaLinhaLog.setCampo("DTLOG", getDhAtual())
 
-                    novaLinha.save()
-                    line = br.readLine()
+                        novaLinhaLog.save()
+                        line = br.readLine()
+                        countLog++
+                    }
+
                 }
                 //Melhorar o recalculo está demorando para carregar
                 recalcularImpostos(nunota)
@@ -98,6 +110,16 @@ class ImportItensCalcImpost : AcaoRotinaJava {
         } finally {
             JapeSession.close(hnd)
         }
+
+        val countLinhas = count-1
+        //Finalmente configuramos uma mensagem para ser exibida após a execução da ação.
+        val mensagem = StringBuffer()
+        mensagem.append("Total de linhas processadas: ${countLinhas} ")
+        mensagem.append(" \nQtd. de erros: ${countLog} ")
+        mensagem.append(" \nErro: Produto não cadastrado.")
+        mensagem.append(" \nVerifique em Log Importação de Compras.")
+
+        contextoAcao.setMensagemRetorno(mensagem.toString())
     }
 
     private fun trataLinha(linha: String): LinhaJson {
@@ -161,6 +183,13 @@ class ImportItensCalcImpost : AcaoRotinaJava {
         } catch (e: Exception) {
             return null
         }
+    }
+
+    /**
+     * Retorna a data atual
+     */
+    fun getDhAtual(): Timestamp {
+        return Timestamp(System.currentTimeMillis())
     }
 
     /**
