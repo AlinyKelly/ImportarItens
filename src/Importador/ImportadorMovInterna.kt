@@ -65,20 +65,8 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
                         novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
-                        novaLinha.setCampo("DTINICIO", stringToTimeStamp(json.dtprev.trim()))
                         novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
                         novaLinha.setCampo("CODPROD", codprod)
-                        novaLinha.setCampo("VLRUNIT", converterValorMonetario(json.vlrunitario.trim()))
-                        novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
-//                        novaLinha.setCampo("CODLOCALDEST", BigDecimal(json.localdestino.trim()))
-                        novaLinha.setCampo("CODVOL", "UN")
-                        novaLinha.setCampo(
-                            "VLRTOT",
-                            converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim()))
-                        )
-                        novaLinha.setCampo("VLRDESC", 0)
-                        novaLinha.setCampo("PERCDESC", 0)
-                        novaLinha.setCampo("ATUALESTOQUE", 1)
 
                         novaLinha.save()
                         line = br.readLine()
@@ -86,11 +74,8 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGIMPORTACAOCOMPRAS")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
-                        novaLinhaLog.setCampo("DTPREV", stringToTimeStamp(json.dtprev.trim()))
-                        novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
-                        novaLinhaLog.setCampo("VLRUNITARIO", converterValorMonetario(json.vlrunitario.trim()))
-                        novaLinhaLog.setCampo("LOCALORIG", BigDecimal(json.localorigem.trim()))
+                        novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
 
                         novaLinhaLog.save()
@@ -101,7 +86,6 @@ class ImportadorMovInterna : AcaoRotinaJava {
                 }
                 //Melhorar o recalculo está demorando para carregar
                 recalcularImpostos(nunota)
-
 
             }
 
@@ -131,7 +115,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
                 return@filter false
             return@filter true
         }.toTypedArray() // Remove linhas vazias
-        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]) else
+        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2]) else
             null
 
         if (ret == null) {
@@ -211,18 +195,10 @@ class ImportadorMovInterna : AcaoRotinaJava {
 //        @JsonProperty("PROJETO")
         val projeto: String,
 //        @JsonProperty("DTPREV")
-        val dtprev: String,
-//        @JsonProperty("QUANTIDADE")
-        val quantidade: String,
-//        @JsonProperty("DESCRICAO")
         val descricao: String,
 //        @JsonProperty("VLRUNITARIO")
-        val vlrunitario: String,
-//        @JsonProperty("LOCALORIG")
-        val localorigem: String
-//        @JsonProperty("LOCALORIG")
-//        val localdestino: String
-
+        val quantidade: String
+//        @JsonProperty("DESCRICAO")
     )
 
 }
