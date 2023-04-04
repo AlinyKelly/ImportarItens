@@ -60,6 +60,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
                     //Buscar descricao
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
                     val codprod = descrprod?.asBigDecimal("CODPROD")
+                    val codvol = descrprod?.asString("CODVOL")
 
                     if(codprod !== null) {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
@@ -70,7 +71,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
                         novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("VLRUNIT", converterValorMonetario(json.vlrunitario.trim()))
                         novaLinha.setCampo("CODLOCALORIG", BigDecimal(json.localorigem.trim()))
-                        novaLinha.setCampo("CODVOL", "UN")
+                        novaLinha.setCampo("CODVOL", codvol)
                         novaLinha.setCampo(
                             "VLRTOT",
                             converterValorMonetario(json.quantidade.trim()).multiply(converterValorMonetario(json.vlrunitario.trim()))
@@ -88,6 +89,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
                         novaLinhaLog.setCampo("DTPREV", stringToTimeStamp(json.dtprev.trim()))
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
+                        novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("VLRUNITARIO", converterValorMonetario(json.vlrunitario.trim()))
                         novaLinhaLog.setCampo("LOCALORIG", BigDecimal(json.localorigem.trim()))
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
@@ -105,7 +107,7 @@ class ImportItensCalcImpost : AcaoRotinaJava {
             }
 
         } catch (e: Exception) {
-            throw MGEModelException("$e $ultimaLinhaJson")
+            throw MGEModelException("${e.localizedMessage} $ultimaLinhaJson")
         } finally {
             JapeSession.close(hnd)
         }

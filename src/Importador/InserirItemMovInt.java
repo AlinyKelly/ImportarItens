@@ -25,6 +25,7 @@ public class InserirItemMovInt implements AcaoRotinaJava {
 //                BigDecimal vlrunit = (BigDecimal) linha.getCampo("VLRUNITARIO");
 //                BigDecimal localorig = (BigDecimal) linha.getCampo("LOCALORIG");
                 BigDecimal codprod = (BigDecimal) linha.getCampo("CODPROD");
+                String codvol = (String) linha.getCampo("CODVOL");
 
                 Registro newTgfIte = contextoAcao.novaLinha("ItemNota");
                 newTgfIte.setCampo("NUNOTA", nunota);
@@ -34,7 +35,7 @@ public class InserirItemMovInt implements AcaoRotinaJava {
                 newTgfIte.setCampo("CODPROD", codprod);
 //                newTgfIte.setCampo("VLRUNIT", vlrunit);
 //                newTgfIte.setCampo("CODLOCALORIG", localorig);
-//                newTgfIte.setCampo("CODVOL", "UN");
+                newTgfIte.setCampo("CODVOL", codvol);
 //                newTgfIte.setCampo("VLRTOT", quantidade.multiply(vlrunit));
 //                newTgfIte.setCampo("VLRDESC", 0);
 //                newTgfIte.setCampo("PERCDESC", 0);

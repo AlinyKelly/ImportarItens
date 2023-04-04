@@ -7,7 +7,11 @@ import br.com.sankhya.jape.core.JapeSession.SessionHandle
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
+//import br.com.sankhya.modelcore.comercial.EstoqueHelpper
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
+import br.com.sankhya.mgewms.model.helpper.EstoqueHelpper
+import br.com.sankhya.modelcore.comercial.CentralItemNota
+import br.com.sankhya.modelcore.comercial.EstoqueItemNota
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
@@ -60,6 +64,8 @@ class ImportadorMovInterna : AcaoRotinaJava {
                     //Buscar descricao
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
                     val codprod = descrprod?.asBigDecimal("CODPROD")
+                    val codvol = descrprod?.asString("CODVOL")
+                    val codlocalpadrao = descrprod?.asBigDecimal("CODLOCALPADRAO")
 
                     if(codprod !== null) {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
@@ -67,7 +73,9 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
                         novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
                         novaLinha.setCampo("CODPROD", codprod)
-
+                        novaLinha.setCampo("CODVOL", codvol)
+                        novaLinha.setCampo("CONTROLE", "")
+                        novaLinha.setCampo("CODLOCALORIG", codlocalpadrao)
                         novaLinha.save()
                         line = br.readLine()
                     } else {
@@ -75,21 +83,21 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
+                        novaLinhaLog.setCampo("CODLOCALORIG", codlocalpadrao)
+                        novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
-
                         novaLinhaLog.save()
                         line = br.readLine()
                         countLog++
                     }
 
                 }
-                //Melhorar o recalculo está demorando para carregar
-                recalcularImpostos(nunota)
+                //recalcularImpostos(nunota)
 
             }
 
         } catch (e: Exception) {
-            throw MGEModelException("$e $ultimaLinhaJson")
+            throw MGEModelException("${e.localizedMessage} $ultimaLinhaJson")
         } finally {
             JapeSession.close(hnd)
         }

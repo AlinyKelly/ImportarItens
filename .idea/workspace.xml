@@ -9,10 +9,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Configuracao de mov interna">
-      <change afterPath="$PROJECT_DIR$/src/Importador/InserirItemMovInt.java" afterDir="false" />
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Desenvolvimento do ImportadorMovInterna e da btn para inserir item na mov interna">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportItensCalcImpost.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorMovInterna.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportadorMovInterna.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/InserirItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/InserirItem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/InserirItemMovInt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/InserirItemMovInt.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +131,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680553016406</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Desenvolvimento do ImportadorMovInterna e da btn para inserir item na mov interna">
+      <created>1680622351938</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1680622351938</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -154,7 +163,8 @@
     <MESSAGE value="Criação do botao para importar os itens para a mov interna" />
     <MESSAGE value="Remocao do importador em java, estava vazio" />
     <MESSAGE value="Configuracao de mov interna" />
-    <option name="LAST_COMMIT_MESSAGE" value="Configuracao de mov interna" />
+    <MESSAGE value="Desenvolvimento do ImportadorMovInterna e da btn para inserir item na mov interna" />
+    <option name="LAST_COMMIT_MESSAGE" value="Desenvolvimento do ImportadorMovInterna e da btn para inserir item na mov interna" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
