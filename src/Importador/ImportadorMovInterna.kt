@@ -71,9 +71,8 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         novaLinha.save()
                         line = br.readLine()
                     } else {
-                        val novaLinhaLog = contextoAcao.novaLinha("AD_LOGIMPORTACAOCOMPRAS")
+                        val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
-                        novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
