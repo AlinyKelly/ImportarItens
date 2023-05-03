@@ -4,24 +4,27 @@ import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava
 import br.com.sankhya.extensions.actionbutton.ContextoAcao
 import br.com.sankhya.jape.core.JapeSession
 import br.com.sankhya.jape.core.JapeSession.SessionHandle
+import br.com.sankhya.jape.util.JapeSessionContext
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
-//import br.com.sankhya.modelcore.comercial.EstoqueHelpper
-import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
-import br.com.sankhya.mgewms.model.helpper.EstoqueHelpper
+import br.com.sankhya.modelcore.comercial.CentralFinanceiro
 import br.com.sankhya.modelcore.comercial.CentralItemNota
-import br.com.sankhya.modelcore.comercial.EstoqueItemNota
+import br.com.sankhya.modelcore.comercial.centrais.CACHelper
+import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
+import java.lang.Boolean
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.text.*
 import java.util.*
+import kotlin.Exception
+import kotlin.String
 
 
 class ImportadorMovInterna : AcaoRotinaJava {
@@ -65,17 +68,18 @@ class ImportadorMovInterna : AcaoRotinaJava {
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
                     val codprod = descrprod?.asBigDecimal("CODPROD")
                     val codvol = descrprod?.asString("CODVOL")
-                    val codlocalpadrao = descrprod?.asBigDecimal("CODLOCALPADRAO")
+//                    val codlocalpadrao = descrprod?.asBigDecimal("CODLOCALPADRAO")
+
 
                     if(codprod !== null) {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
                         novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
+                        novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
                         novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
-                        novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("CODVOL", codvol)
                         novaLinha.setCampo("CONTROLE", "")
-                        novaLinha.setCampo("CODLOCALORIG", codlocalpadrao)
+                        novaLinha.setCampo("CODLOCALORIG", json.localPadrao.trim())
                         novaLinha.save()
                         line = br.readLine()
                     } else {
@@ -83,7 +87,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
-                        novaLinhaLog.setCampo("CODLOCALORIG", codlocalpadrao)
+                        novaLinhaLog.setCampo("CODLOCALORIG", json.localPadrao.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
                         novaLinhaLog.save()
@@ -122,7 +126,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
                 return@filter false
             return@filter true
         }.toTypedArray() // Remove linhas vazias
-        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2]) else
+        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2], cells[3]) else
             null
 
         if (ret == null) {
@@ -198,14 +202,12 @@ class ImportadorMovInterna : AcaoRotinaJava {
 //        centralFinanceiro.refazerFinanceiro()
     }
 
+
     data class LinhaJson(
-//        @JsonProperty("PROJETO")
         val projeto: String,
-//        @JsonProperty("DTPREV")
         val descricao: String,
-//        @JsonProperty("VLRUNITARIO")
-        val quantidade: String
-//        @JsonProperty("DESCRICAO")
+        val quantidade: String,
+        val localPadrao:String
     )
 
 }
