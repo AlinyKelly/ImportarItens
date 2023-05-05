@@ -4,27 +4,23 @@ import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava
 import br.com.sankhya.extensions.actionbutton.ContextoAcao
 import br.com.sankhya.jape.core.JapeSession
 import br.com.sankhya.jape.core.JapeSession.SessionHandle
-import br.com.sankhya.jape.util.JapeSessionContext
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
-import br.com.sankhya.modelcore.comercial.CentralFinanceiro
-import br.com.sankhya.modelcore.comercial.CentralItemNota
-import br.com.sankhya.modelcore.comercial.centrais.CACHelper
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
+import br.com.sankhya.modelcore.util.DynamicEntityNames
+import br.com.sankhya.modelcore.util.EntityFacadeFactory
+import br.com.sankhya.modelcore.util.ProdutoUtils
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
-import java.lang.Boolean
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.text.*
 import java.util.*
-import kotlin.Exception
-import kotlin.String
 
 
 class ImportadorMovInterna : AcaoRotinaJava {
@@ -37,6 +33,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
         //Buscar nro da nota
         val linhaPai = contextoAcao.linhas[0]
         val nunota = linhaPai.getCampo("NUNOTA") as BigDecimal?
+        val codEmpresa = linhaPai.getCampo("CODEMP") as BigDecimal?
 
         val arquivo = retornaVO("Anexo", "CODATA = ${nunota}") ?: throw MGEModelException("Arquivo não encontrado")
         val data = arquivo.asBlob("CONTEUDO")
@@ -64,25 +61,29 @@ class ImportadorMovInterna : AcaoRotinaJava {
 
                     val json = trataLinha(line)
                     ultimaLinhaJson = json
-                    //Buscar descricao
+//                    Buscar codigo do produto usando a descrição
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
                     val codprod = descrprod?.asBigDecimal("CODPROD")
                     val codvol = descrprod?.asString("CODVOL")
-//                    val codlocalpadrao = descrprod?.asBigDecimal("CODLOCALPADRAO")
 
+                    val codlocalpadrao = json.localPadrao.trim()
+                    try {
+//                   Buscar informações do estoque
+                    val buscaEstoque = retornaVO("Estoque", "CODPROD = ${codprod} AND CODEMP = ${codEmpresa} AND CODLOCAL = ${codlocalpadrao} AND ESTOQUE >= ${converterValorMonetario(json.quantidade.trim())} AND ATIVO = 'S' ") ?: throw MGEModelException("Produto sem estoque! Verifique o Local.")
+                    val controleEstoque = buscaEstoque.asString("CONTROLE")
 
-                    if(codprod !== null) {
+                        if (codprod == null) throw MGEModelException("Produto não encontrado!")
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
                         novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
                         novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
                         novaLinha.setCampo("CODVOL", codvol)
-                        novaLinha.setCampo("CONTROLE", "")
+                        novaLinha.setCampo("CONTROLE", controleEstoque)
                         novaLinha.setCampo("CODLOCALORIG", json.localPadrao.trim())
                         novaLinha.save()
                         line = br.readLine()
-                    } else {
+                    } catch (e:Exception) {
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
@@ -90,14 +91,17 @@ class ImportadorMovInterna : AcaoRotinaJava {
                         novaLinhaLog.setCampo("CODLOCALORIG", json.localPadrao.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
+                        novaLinhaLog.setCampo("ERROR", e.localizedMessage+"")
                         novaLinhaLog.save()
                         line = br.readLine()
                         countLog++
                     }
 
                 }
-                //recalcularImpostos(nunota)
-
+                val buscarItem = retornaVO("ItemNota","NUNOTA = ${nunota}")
+                val sequencia = buscarItem?.asBigDecimal("SEQUENCIA")
+//              recalcularImpostos(nunota)
+                getPreco(nunota, sequencia)
             }
 
         } catch (e: Exception) {
@@ -111,8 +115,8 @@ class ImportadorMovInterna : AcaoRotinaJava {
         val mensagem = StringBuffer()
         mensagem.append("Total de linhas processadas: ${countLinhas} ")
         mensagem.append(" \nQtd. de erros: ${countLog} ")
-        mensagem.append(" \nErro: Produto não cadastrado.")
-        mensagem.append(" \nVerifique em Log Importação de Compras.")
+        mensagem.append(" \nErro: Produto não cadastrado ou sem Estoque")
+        mensagem.append(" \nVerifique em Log Importação de Mov. Interna")
 
         contextoAcao.setMensagemRetorno(mensagem.toString())
     }
@@ -165,7 +169,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
 
 
     /**
-     * Converte uma data dd/mm/yyyy ou dd-mm-yyyy em timestamp
+     * Converte uma data dd/mm/yyyy ou dd-mm-yyyy em timestampb
      * @author Luis Ricardo Alves Santos
      * @param strDate  Texto a ser convertido
      * @return [Timestamp]
@@ -200,6 +204,24 @@ class ImportadorMovInterna : AcaoRotinaJava {
 //        val centralFinanceiro = CentralFinanceiro()
 //        centralFinanceiro.inicializaNota(nunota)
 //        centralFinanceiro.refazerFinanceiro()
+
+    }
+
+    @Throws(MGEModelException::class)
+    fun getPreco(idNota: BigDecimal?, idItem: BigDecimal?): BigDecimal? {
+        return try {
+            val nota = JapeFactory.dao(DynamicEntityNames.CABECALHO_NOTA).findByPK(idNota)
+            val item = JapeFactory.dao(DynamicEntityNames.ITEM_NOTA).findByPK(idNota, idItem)
+            val idProduto = item.asBigDecimal("CODPROD")
+            val idParceiro = nota.asBigDecimal("CODPARC")
+            val idVendedor = nota.asBigDecimal("CODVEND")
+            val idTipoOperacao = nota.asBigDecimal("CODTIPOPER")
+            val idLocal = item.asBigDecimal("CODLOCALORIG")
+            val utils = ProdutoUtils(EntityFacadeFactory.getDWFFacade().jdbcWrapper)
+            utils.getPrecoTabela(idProduto, idParceiro, idVendedor, idTipoOperacao, idLocal)
+        } catch (exception: java.lang.Exception) {
+            BigDecimal.ZERO
+        }
     }
 
 
