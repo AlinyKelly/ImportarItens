@@ -1,42 +1,38 @@
 package Importador
-
+//Funciona
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava
 import br.com.sankhya.extensions.actionbutton.ContextoAcao
 import br.com.sankhya.jape.core.JapeSession
-import br.com.sankhya.jape.core.JapeSession.SessionHandle
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
-import br.com.sankhya.mgecomercial.model.centrais.cac.CACSP
-import br.com.sankhya.mgeprod.model.services.ConferenciaApontamentoSP
 import br.com.sankhya.modelcore.MGEModelException
-import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
-import br.com.sankhya.modelcore.util.DynamicEntityNames
-import br.com.sankhya.modelcore.util.EntityFacadeFactory
-import br.com.sankhya.modelcore.util.ProdutoUtils
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
+import utilitarios.DiversosKT
+import utilitarios.post
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.math.BigDecimal
 import java.sql.Timestamp
-import java.text.*
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 
-class ImportadorMovInterna : AcaoRotinaJava {
+class ImportadorMovInAPI : AcaoRotinaJava {
     @Throws(MGEModelException::class, IOException::class)
     override fun doAction(contextoAcao: ContextoAcao) {
-        var hnd: SessionHandle? = null
+        var hnd: JapeSession.SessionHandle? = null
 
         var ultimaLinhaJson: LinhaJson? = null
 
         //Buscar nro da nota
         val linhaPai = contextoAcao.linhas[0]
         val nunota = linhaPai.getCampo("NUNOTA") as BigDecimal?
-        val codEmpresa = linhaPai.getCampo("CODEMP") as BigDecimal?
 
+        //Leitura do arquivo
         val arquivo = retornaVO("Anexo", "CODATA = ${nunota}") ?: throw MGEModelException("Arquivo não encontrado")
         val data = arquivo.asBlob("CONTEUDO")
         val ctx = ServiceContext.getCurrent()
@@ -63,38 +59,68 @@ class ImportadorMovInterna : AcaoRotinaJava {
 
                     val json = trataLinha(line)
                     ultimaLinhaJson = json
-//                    Buscar codigo do produto usando a descrição
+
+//                  Buscar codigo do produto usando a descrição
                     val descrprod = retornaVO("Produto", "DESCRPROD = '${json.descricao}'")
                     val codprod = descrprod?.asBigDecimal("CODPROD")
                     val codvol = descrprod?.asString("CODVOL")
 
-                    val codlocalpadrao = json.localPadrao.trim()
+                    val quantidadeItem = converterValorMonetario(json.quantidade.trim())
+
+                    val jsonItem = """{
+                                "serviceName": "CACSP.incluirNota",
+                                "requestBody": {
+                                    "nota": {
+                                        "cabecalho": {
+                                            "NUNOTA": {
+                                                "${'$'}": "$nunota"
+                                            }
+                                        },
+                                        "itens": {
+                                            "INFORMARPRECO": "False",
+                                            "item": [
+                                                {
+                                                    "NUNOTA": {
+                                                        "${'$'}": "$nunota"
+                                                    },
+                                                    "CODPROD": {
+                                                        "${'$'}": "$codprod"
+                                                    },
+                                                    "SEQUENCIA": {
+                                                        "${'$'}": ""
+                                                    },
+                                                    "QTDNEG": {
+                                                        "${'$'}": "$quantidadeItem"
+                                                    },
+                                                    "CODLOCALORIG": {
+                                                        "${'$'}": "0"
+                                                    },
+                                                    "CODVOL": {
+                                                        "${'$'}": "$codvol"
+                                                    },
+                                                    "AD_PROJPROD": {
+                                                        "${'$'}": "${json.projeto.trim()}"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }""".trimIndent()
 
                     try {
-//                   Buscar informações do estoque
-                    val buscaEstoque = retornaVO("Estoque", "CODPROD = ${codprod} AND CODEMP = ${codEmpresa} AND CODLOCAL = ${codlocalpadrao} AND ESTOQUE >= ${converterValorMonetario(json.quantidade.trim())} AND ATIVO = 'S' ") ?: throw MGEModelException("Produto sem estoque! Verifique o Local.")
-                    val controleEstoque = buscaEstoque.asString("CONTROLE")
-
                         if (codprod == null) throw MGEModelException("Produto não encontrado!")
-                        val novaLinha = contextoAcao.novaLinha("ItemNota")
-                        novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
-                        novaLinha.setCampo("CODPROD", codprod)
-                        novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
-                        novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
-                        novaLinha.setCampo("CODVOL", codvol)
-                        novaLinha.setCampo("CONTROLE", controleEstoque)
-                        novaLinha.setCampo("CODLOCALORIG", json.localPadrao.trim())
-                        novaLinha.save()
+                        post("mgecom/service.sbr?serviceName=CACSP.incluirNota&outputType=json", jsonItem)
                         line = br.readLine()
-                    } catch (e:Exception) {
+                    } catch (e: Exception) {
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
-                        novaLinhaLog.setCampo("CODLOCALORIG", json.localPadrao.trim())
+                        novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
-                        novaLinhaLog.setCampo("ERROR", e.localizedMessage+"")
+                        novaLinhaLog.setCampo("ERROR", e.localizedMessage + "")
                         novaLinhaLog.save()
                         line = br.readLine()
                         countLog++
@@ -110,7 +136,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
             JapeSession.close(hnd)
         }
 
-        val countLinhas = count-1
+        val countLinhas = count - 1
         //Finalmente configuramos uma mensagem para ser exibida após a execução da ação.
         val mensagem = StringBuffer()
         mensagem.append("Total de linhas processadas: ${countLinhas} ")
@@ -130,7 +156,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
                 return@filter false
             return@filter true
         }.toTypedArray() // Remove linhas vazias
-        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2], cells[3]) else
+        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2]) else
             null
 
         if (ret == null) {
@@ -143,7 +169,7 @@ class ImportadorMovInterna : AcaoRotinaJava {
     @Throws(MGEModelException::class)
     fun retornaVO(instancia: String?, where: String?): DynamicVO? {
         var dynamicVo: DynamicVO? = null
-        var hnd: SessionHandle? = null
+        var hnd: JapeSession.SessionHandle? = null
         try {
             hnd = JapeSession.open()
             val instanciaDAO = JapeFactory.dao(instancia)
@@ -191,27 +217,10 @@ class ImportadorMovInterna : AcaoRotinaJava {
         return Timestamp(System.currentTimeMillis())
     }
 
-    /**
-     * Recalcula os impostos dos itens e da nota
-     * @author Aliny Sousa
-     * @param nunota  Numero da nota para recalculo
-     */
-    fun recalcularImpostos(nunota: BigDecimal?) {
-        val impostosHelper = ImpostosHelpper()
-        impostosHelper.calcularImpostos(nunota)
-        impostosHelper.totalizarNota(nunota)
-
-//        val centralFinanceiro = CentralFinanceiro()
-//        centralFinanceiro.inicializaNota(nunota)
-//        centralFinanceiro.refazerFinanceiro()
-
-    }
-
     data class LinhaJson(
         val projeto: String,
         val descricao: String,
-        val quantidade: String,
-        val localPadrao:String
-    )
+        val quantidade: String
+        )
 
 }
