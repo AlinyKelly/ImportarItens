@@ -3,13 +3,12 @@ package Importador;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
-import br.com.sankhya.modelcore.comercial.CentralFinanceiro;
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class InserirItem implements AcaoRotinaJava {
+public class InserirLogItem implements AcaoRotinaJava {
     @Override
     public void doAction(ContextoAcao contextoAcao) throws Exception {
 
