@@ -1,4 +1,4 @@
-package Importador;
+package rascunho;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;

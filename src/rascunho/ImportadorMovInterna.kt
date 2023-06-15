@@ -1,25 +1,26 @@
-package Importador
+package rascunho
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava
 import br.com.sankhya.extensions.actionbutton.ContextoAcao
 import br.com.sankhya.jape.core.JapeSession
 import br.com.sankhya.jape.core.JapeSession.SessionHandle
+import br.com.sankhya.jape.dao.JdbcWrapper
+import br.com.sankhya.jape.sql.NativeSql
 import br.com.sankhya.jape.vo.DynamicVO
 import br.com.sankhya.jape.wrapper.JapeFactory
-import br.com.sankhya.mgecomercial.model.centrais.cac.CACSP
-import br.com.sankhya.mgeprod.model.services.ConferenciaApontamentoSP
 import br.com.sankhya.modelcore.MGEModelException
 import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper
-import br.com.sankhya.modelcore.util.DynamicEntityNames
 import br.com.sankhya.modelcore.util.EntityFacadeFactory
-import br.com.sankhya.modelcore.util.ProdutoUtils
 import br.com.sankhya.ws.ServiceContext
+import com.sankhya.util.JdbcUtils
 import org.apache.commons.io.FileUtils
+import utilitarios.mensagemErro
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.math.BigDecimal
+import java.sql.ResultSet
 import java.sql.Timestamp
 import java.text.*
 import java.util.*
@@ -68,33 +69,40 @@ class ImportadorMovInterna : AcaoRotinaJava {
                     val codprod = descrprod?.asBigDecimal("CODPROD")
                     val codvol = descrprod?.asString("CODVOL")
 
-                    val codlocalpadrao = json.localPadrao.trim()
+//                    Buscar maior estoque do produto
+                    val estoqueM = retornaVO("Estoque", "CODPROD = $codprod AND CODLOCAL <> 900000 AND ATIVO = 'S' AND ESTOQUE IN (SELECT MAX(E.ESTOQUE) AS ESTOQUE FROM TGFEST E WHERE E.CODPROD = $codprod AND E.CODLOCAL <> 900000 AND E.ESTOQUE > 0 AND E.ATIVO = 'S')")
+                    val estoque = estoqueM?.asBigDecimal("ESTOQUE")
 
-                    try {
-//                   Buscar informações do estoque
-                    val buscaEstoque = retornaVO("Estoque", "CODPROD = ${codprod} AND CODEMP = ${codEmpresa} AND CODLOCAL = ${codlocalpadrao} AND ESTOQUE >= ${converterValorMonetario(json.quantidade.trim())} AND ATIVO = 'S' ") ?: throw MGEModelException("Produto sem estoque! Verifique o Local.")
-                    val controleEstoque = buscaEstoque.asString("CONTROLE")
+                    val qtdEstoque = if (estoque == null || estoque.equals("null")) {
+                        BigDecimal.ZERO
+                    } else {
+                        estoque
+                    }
 
-                        if (codprod == null) throw MGEModelException("Produto não encontrado!")
+//                    mensagemErro("$qtdEstoque")
+
+                    val qtdJson = converterValorMonetario(json.quantidade.trim())
+
+                    if (codprod != null && qtdJson < qtdEstoque) {
                         val novaLinha = contextoAcao.novaLinha("ItemNota")
                         novaLinha.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinha.setCampo("CODPROD", codprod)
                         novaLinha.setCampo("AD_PROJPROD", json.projeto.trim())
+                        novaLinha.setCampo("AD_NRTAG", json.tag.trim())
                         novaLinha.setCampo("QTDNEG", converterValorMonetario(json.quantidade.trim()))
                         novaLinha.setCampo("CODVOL", codvol)
-                        novaLinha.setCampo("CONTROLE", controleEstoque)
-                        novaLinha.setCampo("CODLOCALORIG", json.localPadrao.trim())
+                        novaLinha.setCampo("CODLOCALORIG", BigDecimal.ZERO)
                         novaLinha.save()
                         line = br.readLine()
-                    } catch (e:Exception) {
+                    } else {
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
                         novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
-                        novaLinhaLog.setCampo("CODLOCALORIG", json.localPadrao.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
-                        novaLinhaLog.setCampo("ERROR", e.localizedMessage+"")
+                        novaLinhaLog.setCampo("NRTAG", json.tag.trim())
+                        novaLinhaLog.setCampo("ERROR", "Produto não encontrado ou Estoque Insuficiente!")
                         novaLinhaLog.save()
                         line = br.readLine()
                         countLog++
@@ -208,10 +216,10 @@ class ImportadorMovInterna : AcaoRotinaJava {
     }
 
     data class LinhaJson(
+        val tag: String,
         val projeto: String,
         val descricao: String,
-        val quantidade: String,
-        val localPadrao:String
+        val quantidade: String
     )
 
 }

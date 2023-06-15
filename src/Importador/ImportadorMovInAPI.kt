@@ -9,6 +9,8 @@ import br.com.sankhya.modelcore.MGEModelException
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
 import utilitarios.DiversosKT
+import utilitarios.getPropFromJSON
+import utilitarios.mensagemErro
 import utilitarios.post
 import java.io.BufferedReader
 import java.io.File
@@ -65,7 +67,19 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                     val codprod = descrprod?.asBigDecimal("CODPROD")
                     val codvol = descrprod?.asString("CODVOL")
 
-                    val quantidadeItem = converterValorMonetario(json.quantidade.trim())
+//                    Buscar maior estoque do produto
+                    val estoqueM = retornaVO("Estoque", "CODPROD = $codprod AND CODLOCAL <> 900000 AND ATIVO = 'S' AND ESTOQUE IN (SELECT MAX(E.ESTOQUE) AS ESTOQUE FROM TGFEST E WHERE E.CODPROD = $codprod AND E.CODLOCAL <> 900000 AND E.ESTOQUE > 0 AND E.ATIVO = 'S')")
+                    val estoque = estoqueM?.asBigDecimal("ESTOQUE")
+
+                    val qtdEstoque = if (estoque == null || estoque.equals("null")) {
+                        BigDecimal.ZERO
+                    } else {
+                        estoque
+                    }
+
+//                    mensagemErro("$qtdEstoque")
+
+                    val qtdJson = converterValorMonetario(json.quantidade.trim())
 
                     val jsonItem = """{
                                 "serviceName": "CACSP.incluirNota",
@@ -90,7 +104,7 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                                                         "${'$'}": ""
                                                     },
                                                     "QTDNEG": {
-                                                        "${'$'}": "$quantidadeItem"
+                                                        "${'$'}": "$qtdJson"
                                                     },
                                                     "CODLOCALORIG": {
                                                         "${'$'}": "0"
@@ -100,6 +114,9 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                                                     },
                                                     "AD_PROJPROD": {
                                                         "${'$'}": "${json.projeto.trim()}"
+                                                    },
+                                                    "AD_NRTAG": {
+                                                        "${'$'}": "${json.tag.trim()}"
                                                     }
                                                 }
                                             ]
@@ -108,11 +125,21 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                                 }
                             }""".trimIndent()
 
-                    try {
-                        if (codprod == null) throw MGEModelException("Produto não encontrado!")
-                        post("mgecom/service.sbr?serviceName=CACSP.incluirNota&outputType=json", jsonItem)
+                    var retornoApi = ""
+
+                    if (codprod != null && qtdJson < qtdEstoque) {
+                        val (postbody) = post("mgecom/service.sbr?serviceName=CACSP.incluirNota&outputType=json", jsonItem)
+                        val status = getPropFromJSON("status", postbody)
+                        val statusMessage = getPropFromJSON("statusMessage", postbody)
+
+                        retornoApi = if (status == "1") {
+                            "OK"
+                        } else {
+                            statusMessage
+                        }
+
                         line = br.readLine()
-                    } catch (e: Exception) {
+                    } else {
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
@@ -120,7 +147,8 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                         novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
-                        novaLinhaLog.setCampo("ERROR", e.localizedMessage + "")
+                        novaLinhaLog.setCampo("NRTAG", json.tag.trim())
+                        novaLinhaLog.setCampo("ERROR", "Produto não cadastro ou Estoque Insuficiente. $retornoApi")
                         novaLinhaLog.save()
                         line = br.readLine()
                         countLog++
@@ -156,7 +184,7 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                 return@filter false
             return@filter true
         }.toTypedArray() // Remove linhas vazias
-        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2]) else
+        val ret = if (cells.isNotEmpty()) LinhaJson(cells[0], cells[1], cells[2], cells[3]) else
             null
 
         if (ret == null) {
@@ -193,7 +221,6 @@ class ImportadorMovInAPI : AcaoRotinaJava {
         return BigDecimal(valorNumerico)
     }
 
-
     /**
      * Converte uma data dd/mm/yyyy ou dd-mm-yyyy em timestampb
      * @author Luis Ricardo Alves Santos
@@ -218,6 +245,7 @@ class ImportadorMovInAPI : AcaoRotinaJava {
     }
 
     data class LinhaJson(
+        val tag: String,
         val projeto: String,
         val descricao: String,
         val quantidade: String

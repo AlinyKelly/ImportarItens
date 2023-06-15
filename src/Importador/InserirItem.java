@@ -8,7 +8,7 @@ import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class InserirLogItem implements AcaoRotinaJava {
+public class InserirItem implements AcaoRotinaJava {
     @Override
     public void doAction(ContextoAcao contextoAcao) throws Exception {
 
