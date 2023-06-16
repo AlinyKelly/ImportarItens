@@ -9,16 +9,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Melhoria dos botao de importacao da mov interna e criacao do btn utilizando a API Sankhya">
-      <change afterPath="$PROJECT_DIR$/src/utilitarios/resources/getKeys.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utilitarios/resources/getPropertyFromObject.js" afterDir="false" />
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorDeItensKT.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/rascunho/ImportadorDeItensKT.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorMovInAPI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportadorMovInAPI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorMovInterna.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/rascunho/ImportadorMovInterna.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/InserirLogItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/InserirItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/InserirLogItemMovInt.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/rascunho/InserirLogItemMovInt.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilitarios/DiversosKT.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilitarios/DiversosKT.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/InserirItemLogMovIn.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/InserirItemLogMovIn.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,18 +38,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "C:/Users/Usuario/IdeaProjects/ImportarItens/src/utilitarios",
-    "project.structure.last.edited": "Libraries",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Usuario/IdeaProjects/ImportarItens/src/utilitarios&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Usuario\IdeaProjects\ImportarItens\src\utilitarios" />
@@ -193,7 +185,14 @@
       <option name="project" value="LOCAL" />
       <updated>1683577435788</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api">
+      <created>1686862539492</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1686862539492</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -225,7 +224,8 @@
     <MESSAGE value="Criação da utilitorios DiversosKT" />
     <MESSAGE value="Renomear classe para identificacao melhor que ser trata do botao para as telas de log" />
     <MESSAGE value="Melhoria dos botao de importacao da mov interna e criacao do btn utilizando a API Sankhya" />
-    <option name="LAST_COMMIT_MESSAGE" value="Melhoria dos botao de importacao da mov interna e criacao do btn utilizando a API Sankhya" />
+    <MESSAGE value="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api" />
+    <option name="LAST_COMMIT_MESSAGE" value="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
