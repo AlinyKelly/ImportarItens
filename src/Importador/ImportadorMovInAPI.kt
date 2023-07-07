@@ -8,9 +8,7 @@ import br.com.sankhya.jape.wrapper.JapeFactory
 import br.com.sankhya.modelcore.MGEModelException
 import br.com.sankhya.ws.ServiceContext
 import org.apache.commons.io.FileUtils
-import utilitarios.DiversosKT
 import utilitarios.getPropFromJSON
-import utilitarios.mensagemErro
 import utilitarios.post
 import java.io.BufferedReader
 import java.io.File
@@ -41,7 +39,9 @@ class ImportadorMovInAPI : AcaoRotinaJava {
         val file = File(ctx.tempFolder, "ITEMPEDIDO" + System.currentTimeMillis())
 
         var count = 0
-        var countLog = 0
+        var countErroProduto = 0
+        var countErroEstoque = 0
+        var countDiferenca = 0
 
         FileUtils.writeByteArrayToFile(file, data)
 
@@ -71,7 +71,7 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                     val estoqueM = retornaVO("Estoque", "CODPROD = $codprod AND CODLOCAL <> 900000 AND ATIVO = 'S' AND ESTOQUE IN (SELECT MAX(E.ESTOQUE) AS ESTOQUE FROM TGFEST E WHERE E.CODPROD = $codprod AND E.CODLOCAL <> 900000 AND E.ESTOQUE > 0 AND E.ATIVO = 'S')")
                     val estoque = estoqueM?.asBigDecimal("ESTOQUE")
 
-                    val qtdEstoque = if (estoque == null || estoque.equals("null")) {
+                    val qtdEstoque =  if (estoque == null || estoque.equals("null")) {
                         BigDecimal.ZERO
                     } else {
                         estoque
@@ -80,6 +80,18 @@ class ImportadorMovInAPI : AcaoRotinaJava {
 //                    mensagemErro("$qtdEstoque")
 
                     val qtdJson = converterValorMonetario(json.quantidade.trim())
+
+                    //Inserir apenas a quantidade correta no estoque
+                    var quantidadeCorreta = BigDecimal.ZERO
+
+                    var quantidadeErro = BigDecimal.ZERO
+
+                    if (qtdEstoque > BigDecimal.ZERO && qtdJson > qtdEstoque) { // ex: 15 > 10
+                        quantidadeCorreta = qtdEstoque
+                        quantidadeErro = qtdJson - qtdEstoque
+                    } else {
+                        quantidadeCorreta = qtdJson
+                    }
 
                     val jsonItem = """{
                                 "serviceName": "CACSP.incluirNota",
@@ -104,7 +116,7 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                                                         "${'$'}": ""
                                                     },
                                                     "QTDNEG": {
-                                                        "${'$'}": "$qtdJson"
+                                                        "${'$'}": "$quantidadeCorreta"
                                                     },
                                                     "CODLOCALORIG": {
                                                         "${'$'}": "0"
@@ -125,33 +137,52 @@ class ImportadorMovInAPI : AcaoRotinaJava {
                                 }
                             }""".trimIndent()
 
-                    var retornoApi = ""
-
-                    if (codprod != null && qtdJson < qtdEstoque) {
+                    if (codprod != null && quantidadeErro > BigDecimal.ZERO) {
                         val (postbody) = post("mgecom/service.sbr?serviceName=CACSP.incluirNota&outputType=json", jsonItem)
                         val status = getPropFromJSON("status", postbody)
                         val statusMessage = getPropFromJSON("statusMessage", postbody)
 
-                        retornoApi = if (status == "1") {
-                            "OK"
-                        } else {
-                            statusMessage
-                        }
-
-                        line = br.readLine()
-                    } else {
+                        // Add uma linha no log com a diferença
                         val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
                         novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
                         novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
-                        novaLinhaLog.setCampo("QUANTIDADE", converterValorMonetario(json.quantidade.trim()))
                         novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
                         novaLinhaLog.setCampo("CODVOL", codvol)
                         novaLinhaLog.setCampo("DTLOG", getDhAtual())
                         novaLinhaLog.setCampo("NRTAG", json.tag.trim())
-                        novaLinhaLog.setCampo("ERROR", "Produto não cadastro ou Estoque Insuficiente. $retornoApi")
+                        novaLinhaLog.setCampo("QUANTIDADE", quantidadeErro)
+                        novaLinhaLog.setCampo("ERROR", "Diferença de Estoque")
+                        novaLinhaLog.save()
+
+                        countDiferenca++
+
+                        line = br.readLine()
+                    } else if (codprod != null && qtdEstoque > BigDecimal.ZERO && quantidadeErro <= BigDecimal.ZERO) {
+                        val (postbody) = post("mgecom/service.sbr?serviceName=CACSP.incluirNota&outputType=json", jsonItem)
+                        val status = getPropFromJSON("status", postbody)
+                        val statusMessage = getPropFromJSON("statusMessage", postbody)
+                        line = br.readLine()
+
+                    } else {
+                        // qtd de erros do produto é maior igual 0 então add uma linha
+                        val novaLinhaLog = contextoAcao.novaLinha("AD_LOGMOVINTERNA")
+                        novaLinhaLog.setCampo("NUNOTA", linhaPai.getCampo("NUNOTA"))
+                        novaLinhaLog.setCampo("DESCRICAO", json.descricao.trim())
+                        novaLinhaLog.setCampo("PROJETO", json.projeto.trim())
+                        novaLinhaLog.setCampo("CODVOL", codvol)
+                        novaLinhaLog.setCampo("DTLOG", getDhAtual())
+                        novaLinhaLog.setCampo("NRTAG", json.tag.trim())
+                        if (codprod == null) {
+                            novaLinhaLog.setCampo("QUANTIDADE", qtdJson)
+                            novaLinhaLog.setCampo("ERROR", "Produto não cadastrado")
+                            countErroProduto++
+                        } else {
+                            novaLinhaLog.setCampo("QUANTIDADE", qtdJson)
+                            novaLinhaLog.setCampo("ERROR", "Produto sem estoque")
+                            countErroEstoque++
+                        }
                         novaLinhaLog.save()
                         line = br.readLine()
-                        countLog++
                     }
 
                 }
@@ -167,9 +198,9 @@ class ImportadorMovInAPI : AcaoRotinaJava {
         val countLinhas = count - 1
         //Finalmente configuramos uma mensagem para ser exibida após a execução da ação.
         val mensagem = StringBuffer()
-        mensagem.append("Total de linhas processadas: ${countLinhas} ")
-        mensagem.append(" \nQtd. de erros: ${countLog} ")
-        mensagem.append(" \nErro: Produto não cadastrado ou sem Estoque")
+        mensagem.append("Total de linhas processadas: $countLinhas ")
+        mensagem.append(" \nTotal Produto não cadastrado =  $countErroProduto")
+        mensagem.append(" \nTotal de Produtos sem estoque =  $countErroEstoque")
         mensagem.append(" \nVerifique em Log Importação de Mov. Interna")
 
         contextoAcao.setMensagemRetorno(mensagem.toString())

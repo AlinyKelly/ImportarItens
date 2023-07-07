@@ -9,9 +9,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api">
+    <list default="true" id="e2d49580-8a10-453d-82c1-00f4d4b2b2fb" name="Changes" comment="Ajuste no botão de Inserir item da tela de Log de Mov Internas">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Importador/InserirItemLogMovIn.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/InserirItemLogMovIn.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Importador/ImportadorMovInAPI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Importador/ImportadorMovInAPI.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -192,7 +192,14 @@
       <option name="project" value="LOCAL" />
       <updated>1686862539492</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Ajuste no botão de Inserir item da tela de Log de Mov Internas">
+      <created>1686921396409</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1686921396409</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -225,7 +232,8 @@
     <MESSAGE value="Renomear classe para identificacao melhor que ser trata do botao para as telas de log" />
     <MESSAGE value="Melhoria dos botao de importacao da mov interna e criacao do btn utilizando a API Sankhya" />
     <MESSAGE value="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finalização do botão de importacao via api para mov interna. falta alterar o botão para inserir os itens corrigidos e testar erro da api" />
+    <MESSAGE value="Ajuste no botão de Inserir item da tela de Log de Mov Internas" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ajuste no botão de Inserir item da tela de Log de Mov Internas" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
